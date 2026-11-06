@@ -78,6 +78,7 @@ Android prüft App Links beim Installieren; nach Änderungen an `assetlinks.json
 cd site && python3 -m http.server 8000
 ```
 
-Statischer Server liefert `404.html` nur mit eigener Regel; zum Testen die Seite direkt als
-`http://localhost:8000/404.html` öffnen (Pfad passt dann nicht auf `/t/…`; für den Pfadtest einen Server mit 404-Fallback
-verwenden oder die Seite nach dem Deploy auf `https://mgursch.github.io/kortform-liga-web/t/<token>` prüfen).
+Ein einfacher statischer Server liefert `404.html` nur über eine eigene Fallback-Regel. Zum Testen einen Server mit
+404-Fallback auf `site/404.html` verwenden und `http://localhost:<port>/d/<token>` öffnen. Die Seitenpfade sind absolut
+(`/style.css`), daher funktioniert die Seite nur an der Wurzel einer Domain (nicht unter `mgursch.github.io/kortform-liga-web/`);
+`.well-known/` lässt sich dort aber schon vor dem DNS-Eintrag prüfen.
