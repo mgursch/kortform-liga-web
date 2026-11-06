@@ -32,18 +32,28 @@
   <main>
     <div class="center" aria-live="polite">
       <span class="avatar" id="avatar" aria-hidden="true" hidden></span>
-      <p class="lead" id="lead">Einladung zur Mannschaftsführung</p>
-      <h1 id="title">Mannschaftsführung in der Kortform-App</h1>
+      <p class="lead" id="lead" hidden></p>
+      <h1 id="title" hidden></h1>
       <p class="meta" id="meta" hidden></p>
-      <p class="text" id="text">Die Einladung lässt sich nur in der Kortform-App annehmen. Installiere die App und öffne den Link danach noch einmal.</p>
+      <p class="text" id="text" hidden></p>
       <div class="spinner" id="spinner" role="status" aria-label="Einladung wird geprüft" hidden></div>
-      <div class="actions" id="stores">
+      <div class="actions" id="stores" hidden>
         <a class="btn btn-large" href="https://play.google.com/store/apps/details?id=com.swordistudios.kortform" rel="noopener noreferrer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"></path><path d="M20 4l-9 9"></path><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"></path></svg> Google Play</a>
         <a class="btn btn-large" href="https://apps.apple.com/at/app/kortform-tennis-wertung/id6826770040" rel="noopener noreferrer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"></path><path d="M20 4l-9 9"></path><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"></path></svg> App Store</a>
       </div>
       <p class="link-line" id="home-link" hidden><a href="https://kortform.at/">Mehr zu Kortform auf kortform.at</a></p>
     </div>
-    <noscript><p class="text">Für die Anzeige der Einladung wird JavaScript benötigt. Du kannst den Link auch direkt in der Kortform-App öffnen.</p></noscript>
+    <noscript>
+      <div class="center">
+        <p class="lead">Einladung zur Mannschaftsführung</p>
+        <h1>Mannschaftsführung in der Kortform-App</h1>
+        <p class="text">Die Einladung lässt sich nur in der Kortform-App annehmen. Installiere die App und öffne den Link danach noch einmal.</p>
+        <div class="actions">
+          <a class="btn btn-large" href="https://play.google.com/store/apps/details?id=com.swordistudios.kortform" rel="noopener noreferrer">Google Play</a>
+          <a class="btn btn-large" href="https://apps.apple.com/at/app/kortform-tennis-wertung/id6826770040" rel="noopener noreferrer">App Store</a>
+        </div>
+      </div>
+    </noscript>
   </main>
 
   <footer>

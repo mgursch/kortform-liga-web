@@ -31,6 +31,9 @@
     return (first + second).toUpperCase();
   }
 
+  var BASE_TITLE = "Kortform";
+  function setTitle(part) { document.title = part + " · " + BASE_TITLE; }
+
   function setText(id, text) {
     var el = $(id);
     el.textContent = text;
@@ -39,6 +42,7 @@
 
   /** Generic page: no preview (placeholder config, network error, unexpected answer). */
   function showGeneric() {
+    setTitle("Einladung zur Mannschaftsführung");
     $("spinner").hidden = true;
     $("avatar").hidden = true;
     $("meta").hidden = true;
@@ -49,6 +53,7 @@
   }
 
   function showInvalid(status) {
+    setTitle(TITLES[status]);
     $("spinner").hidden = true;
     $("avatar").hidden = true;
     $("meta").hidden = true;
@@ -61,6 +66,7 @@
   }
 
   function showValid(preview) {
+    setTitle("Einladung zur Mannschaftsführung");
     $("spinner").hidden = true;
     var inviter = typeof preview.inviter_display_name === "string" ? preview.inviter_display_name.trim() : "";
     var team = typeof preview.team_name === "string" ? preview.team_name.trim() : "";
@@ -104,9 +110,11 @@
   }
 
   function init() {
-    var match = /^\/([td])\/([A-Za-z0-9_-]{10,64})\/?$/.exec(window.location.pathname);
+    var match = /^\/([td])\/([A-Za-z0-9_-]{4,64})\/?$/.exec(window.location.pathname);
     if (!match) {
       // Not an invite path: plain "not found" page.
+      setTitle("Seite nicht gefunden");
+      $("spinner").hidden = true;
       $("app-banner").hidden = true;
       $("avatar").hidden = true;
       $("lead").hidden = true;
@@ -123,11 +131,7 @@
     var cfg = window.LIGA_CONFIG && window.LIGA_CONFIG[match[1]];
     if (isPlaceholder(cfg)) { showGeneric(); return; }
 
-    // Loading state: hide the generic copy until the preview arrives.
-    $("lead").hidden = true;
-    $("title").hidden = true;
-    $("text").hidden = true;
-    $(STORE_LINKS_ID).hidden = true;
+    // Loading state: the copy stays hidden (markup default) until the preview arrives.
     $("spinner").hidden = false;
 
     fetchPreview(cfg, token).then(function (data) {
