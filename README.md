@@ -8,7 +8,7 @@ ohne Cookies, ohne Tracker, `noindex`. Gehört zum Plan `docs/plans/kort-id-plan
 - `/t/<token>` (Prod) und `/d/<token>` (Dev): GitHub Pages liefert dafür `404.html` aus. Die Seite liest Präfix und Token,
   fragt die öffentliche RPC `get_invite_preview` des passenden Supabase-Projekts ab und zeigt Mannschaft und Liga bzw. eine
   Meldung für abgelaufene, benutzte, zurückgezogene oder unbekannte Einladungen. Dazu ein Banner „In der App öffnen“
-  (`kortform://invite/<token>`) und die Store-Buttons.
+  (`kortform://invite/<token>` für `/t/`, `kortform-dev://invite/<token>` für `/d/`) und die Store-Buttons.
 - Wenn die App installiert ist, öffnen Android App Links und iOS Universal Links den Link direkt in der App; die Seite
   erscheint nur ohne App.
 - `/` (`index.html`): kurze Erklärung und Link auf kortform.at.

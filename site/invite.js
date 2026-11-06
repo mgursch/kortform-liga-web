@@ -126,7 +126,9 @@
     }
 
     var token = match[2];
-    $("open-app").href = "kortform://invite/" + token;
+    // Fallback custom scheme per environment: prod kortform://, dev kortform-dev://.
+    var scheme = match[1] === "d" ? "kortform-dev" : "kortform";
+    $("open-app").href = scheme + "://invite/" + token;
 
     var cfg = window.LIGA_CONFIG && window.LIGA_CONFIG[match[1]];
     if (isPlaceholder(cfg)) { showGeneric(); return; }
