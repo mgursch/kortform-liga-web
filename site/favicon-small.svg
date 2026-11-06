@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Kortform">
+  <rect width="1024" height="1024" rx="224" fill="#16150f"/>
+  <!-- Simplified, bolder rating curve for tab sizes: fluctuating, trending down -->
+  <polyline fill="none" stroke="#3ea56b" stroke-width="124" stroke-linecap="round" stroke-linejoin="round"
+    points="190,290 350,290 440,560 600,380 700,730 840,730"/>
+</svg>

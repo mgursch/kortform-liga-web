@@ -1,0 +1,22 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.swordistudios.kortform.dev",
+      "sha256_cert_fingerprints": [
+        "48:61:61:C4:B3:53:A6:D7:3A:E3:99:26:A1:E7:8D:3F:69:B2:FA:01:12:CB:79:06:A9:0C:06:6A:74:8E:67:BD"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.swordistudios.kortform",
+      "sha256_cert_fingerprints": [
+        "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00"
+      ]
+    }
+  }
+]

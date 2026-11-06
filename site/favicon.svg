@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Kortform">
+  <rect width="1024" height="1024" rx="224" fill="#16150f"/>
+  <!-- Rating curve: fluctuating, trending down = better -->
+  <polyline fill="none" stroke="#3ea56b" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"
+    points="176,347 221,347 266,395 310,395 355,310 400,310 445,439 490,439 534,527 579,527 624,483 669,483 714,606 758,606 803,706 848,706"/>
+</svg>

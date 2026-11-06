@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["84TKTNMRH2.com.swordistudios.kortform"],
+        "components": [{ "/": "/t/*", "comment": "Prod invite links" }]
+      },
+      {
+        "appIDs": ["84TKTNMRH2.com.swordistudios.kortform.dev"],
+        "components": [{ "/": "/d/*", "comment": "Dev invite links" }]
+      }
+    ]
+  }
+}
