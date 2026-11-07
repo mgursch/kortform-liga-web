@@ -33,16 +33,15 @@ site/
 **Keys (`site/config.js`)**: `t` = Prod (`/t/`), `d` = Dev (`/d/`). Nur Projekt-Ref und der **publishable** Key
 (`sb_publishable_…`, öffentlich gedacht). Nie einen Secret- oder Service-Role-Key eintragen. Holen:
 `supabase projects api-keys --project-ref <REF>` (nur die Zeile `publishable` übernehmen).
-Solange der Prod-Ref `PROD_REF_TBD` ist, zeigt `/t/…` die allgemeine Seite „In der App öffnen“ ohne Vorschau.
-Wird der Prod-Ref gesetzt, **auch die `connect-src`-Liste im CSP-`<meta>` von `site/404.html` anpassen**
-(`https://prod-ref-tbd.supabase.co` ersetzen), sonst blockiert der Browser die Abfrage.
+Prod-Ref ist `sjkoqqcpfwegmwzavida` (gesetzt). Ändert sich der Ref, **auch die `connect-src`-Liste im CSP-`<meta>` von
+`site/404.html` anpassen** (Host `https://<ref>.supabase.co`), sonst blockiert der Browser die Abfrage.
 
 **Android-Fingerprints (`site/.well-known/assetlinks.json`)**: je App-ID ein Eintrag.
 - `com.swordistudios.kortform.dev`: SHA-256 des lokalen Debug-Keystores:
   `keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep SHA256`
-- `com.swordistudios.kortform`: derzeit ein Platzhalter (nur Nullen). Eintragen: SHA-256 des **App-Signing-Keys** aus der Play
-  Console (Test und Veröffentlichung → App-Signatur) und des **Upload-Keys** (zweiter Fingerprint in der Liste, damit
-  auch lokal signierte Builds verifizieren). Weitere Geräte-Debug-Keystores bei Bedarf als zusätzliche Fingerprints.
+- `com.swordistudios.kortform`: eingetragen ist der SHA-256 des **App-Signing-Keys** aus der Play Console (Test und
+  Veröffentlichung → App-Signatur). Der **Upload-Key** (zweiter Fingerprint in der Liste, damit auch lokal signierte
+  Builds verifizieren) ist noch nicht ergänzt. Weitere Geräte-Debug-Keystores bei Bedarf als zusätzliche Fingerprints.
 
 **iOS (`site/.well-known/apple-app-site-association`)**: Team-ID `84TKTNMRH2`; Prod-Bundle `com.swordistudios.kortform` mit
 Pfad `/t/*`, Dev-Bundle `com.swordistudios.kortform.dev` mit `/d/*`. Die App braucht das Entitlement
