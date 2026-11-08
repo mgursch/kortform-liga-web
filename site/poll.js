@@ -7,11 +7,13 @@
   "use strict";
 
   var root = document.getElementById("poll-view");
-  var route = /^\/([vw])\/([^/]*)\/?$/.exec(window.location.pathname);
+  // Same test as route.js (which already hid the invite view): every /v/… and /w/… path is ours, a malformed id shows
+  // "unknown" instead of a blank page.
+  var route = /^\/([vw])\/(.*)$/.exec(window.location.pathname);
   if (!root || !route) return; // not a poll path: invite.js handles the page
 
   var PREFIX = route[1];
-  var PUBLIC_ID = route[2];
+  var PUBLIC_ID = route[2].replace(/\/$/, "");
   var ID_OK = /^[A-Za-z0-9]{12}$/.test(PUBLIC_ID);
   // Custom scheme per environment, same idea as invite.js: prod kortform://, dev kortform-dev://.
   var SCHEME = PREFIX === "w" ? "kortform-dev" : "kortform";
@@ -43,6 +45,8 @@
     writeLimit: "Gerade sind zu viele Antworten unterwegs. Bitte versuche es in ein paar Minuten noch einmal.",
     closed: "Dieser Spieltag hat schon begonnen. Antworten sind nicht mehr möglich.",
     playerUnknown: "Bitte wähle dich noch einmal aus.",
+    changed: "Der Spielplan hat sich geändert. Bitte prüfe deine Antwort.",
+    invalid: "Nicht gespeichert. Bitte prüfe deine Eingabe.",
     manualLimit: "Es sind schon sehr viele Personen ohne Kaderplatz eingetragen. Bitte melde dich bei der Mannschaftsführung."
   };
 
@@ -142,8 +146,11 @@
   function isObject(value) { return value !== null && typeof value === "object" && !Array.isArray(value); }
   function str(value) { return typeof value === "string" ? value.trim() : ""; }
 
-  /** Removes control characters and trims. */
-  function clean(value) { return String(value || "").replace(/[\u0000-\u001f\u007f]/g, "").trim(); }
+  /** Removes control characters (C0, DEL, C1, line/paragraph separators: what the server rejects) and trims. */
+  function clean(value) { return String(value || "").replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, "").trim(); }
+
+  /** At most max characters (code points, like the server's char_length), never splitting a surrogate pair. */
+  function cut(value, max) { return Array.from(value).slice(0, max).join(""); }
 
   var uidCounter = 0;
   function uid(prefix) { uidCounter += 1; return prefix + uidCounter; }
@@ -217,7 +224,7 @@
             out.answers[who] = {};
             Object.keys(mine).forEach(function (mid) {
               var a = mine[mid];
-              if (isObject(a) && STATUS[a.status]) out.answers[who][mid] = { status: a.status, comment: clean(a.comment).slice(0, COMMENT_MAX) };
+              if (isObject(a) && STATUS[a.status]) out.answers[who][mid] = { status: a.status, comment: cut(clean(a.comment), COMMENT_MAX) };
             });
           });
         }
@@ -251,8 +258,8 @@
       return found ? { kind: "roster", key: identity.key } : null;
     }
     if (identity.kind === "manual" && MANUAL_ID.test(identity.manual_id || "")) {
-      var first = clean(identity.first).slice(0, MANUAL_NAME_MAX);
-      var last = clean(identity.last).slice(0, MANUAL_NAME_MAX);
+      var first = cut(clean(identity.first), MANUAL_NAME_MAX);
+      var last = cut(clean(identity.last), MANUAL_NAME_MAX);
       if (!first || !last) return null;
       return { kind: "manual", manual_id: identity.manual_id, first: first, last: last, confirmed: identity.confirmed === true };
     }
@@ -292,7 +299,7 @@
   // ---------------------------------------------------------------------------------------------------------------
   // Network
 
-  function RpcError(code) { this.code = code; }
+  function RpcError(code, detail) { this.code = code; this.detail = detail || ""; }
 
   function rpc(name, body) {
     var cfg = window.LIGA_CONFIG && window.LIGA_CONFIG[PREFIX];
@@ -310,7 +317,10 @@
     }).then(function (response) {
       if (timer) clearTimeout(timer);
       return response.json().catch(function () { return null; }).then(function (data) {
-        if (!response.ok) throw new RpcError(isObject(data) && typeof data.message === "string" ? data.message : "http");
+        if (!response.ok) {
+          throw new RpcError(isObject(data) && typeof data.message === "string" ? data.message : "http",
+            isObject(data) && typeof data.details === "string" ? data.details : "");
+        }
         return data;
       });
     }, function () {
@@ -401,7 +411,7 @@
   }
 
   function normalizeForSearch(text) {
-    return String(text).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    return String(text).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   }
 
   function formatItn(itn) {
@@ -440,7 +450,7 @@
       h("a", { class: "pv-wordmark", href: "https://kortform.at/", text: "Kortform" }),
       h("span", { class: "pv-top-sub", text: "· Verfügbarkeit" }));
 
-    el.col = h("div", { class: "pv-col", "aria-live": "polite" });
+    el.col = h("div", { class: "pv-col" });
     el.aside = h("aside", { class: "pv-aside", "aria-label": "Hinweis", hidden: true },
       h("div", { class: "pv-card" },
         h("div", { class: "pv-card-label", text: "So funktioniert’s" }),
@@ -476,23 +486,26 @@
 
   function hideSnack() { clearTimeout(S.snackTimer); el.snack.hidden = true; }
 
-  function show(view, opts) {
+  function show(view) {
+    // Focus inside the column (or lost to the body by a removed button) would vanish with the re-render: remember it,
+    // the render then moves it to the new heading.
+    var active = document.activeElement;
+    S.hadFocus = !!active && (active === document.body || el.col.contains(active));
     S.view = view;
     S.ui = {};
     S.offlineEl = null;
     el.aside.hidden = view !== "answer";
     clear(el.col);
     window.scrollTo(0, 0);
-    if (opts && opts.focus) {
-      var heading = el.col.querySelector("[data-focus]");
-      if (heading) heading.focus({ preventScroll: true });
-    }
   }
 
   function focusHeading() {
     var heading = el.col.querySelector("[data-focus]");
     if (heading) heading.focus({ preventScroll: true });
   }
+
+  /** End of every render: focus the new heading after a user action or when focus was in the old content. */
+  function settleFocus(focus) { if (focus === true || S.hadFocus) focusHeading(); }
 
   // ---------------------------------------------------------------------------------------------------------------
   // Plain message views
@@ -509,20 +522,21 @@
       h("span", { class: "pv-message-icon", "aria-hidden": "true" }, icon(iconName, 44, 1.8)),
       h("p", { text: text, tabindex: "-1", "data-focus": "" }),
       button));
+    settleFocus(true);
   }
 
   function renderUnknown() { renderMessage("unknown", "Abfrage nicht gefunden", TEXT.unknown, "info"); }
   function renderEnd() { renderMessage("end", "Saison beendet", TEXT.end, "check"); }
 
   function renderLoadError() {
-    var retry = h("button", { type: "button", class: "btn btn-large", text: "Erneut versuchen", onclick: function () { load(); } });
+    var retry = h("button", { type: "button", class: "btn btn-large", text: "Erneut versuchen", onclick: function () { load(true); } });
     renderMessage("error", "Abfrage nicht geladen", TEXT.loadError, "wifioff", retry);
   }
 
   // ---------------------------------------------------------------------------------------------------------------
   // "Wer bist du?"
 
-  function renderWho() {
+  function renderWho(focus) {
     show("who");
     setTitle("Wer bist du?");
     var roster = sortedRoster();
@@ -561,6 +575,7 @@
         h("span", { class: "pv-icon-slot" }, icon("userplus", 22)),
         "Ich bin nicht in der Liste"));
     fill("");
+    settleFocus(focus);
   }
 
   function choosePerson(p) {
@@ -584,8 +599,8 @@
 
     var form = h("form", { class: "pv-form", novalidate: true, onsubmit: function (event) {
       event.preventDefault();
-      var f = clean(first.input.value).slice(0, MANUAL_NAME_MAX);
-      var l = clean(last.input.value).slice(0, MANUAL_NAME_MAX);
+      var f = cut(clean(first.input.value), MANUAL_NAME_MAX);
+      var l = cut(clean(last.input.value), MANUAL_NAME_MAX);
       if (!f || !l) return;
       var stored = S.store.manual;
       var id = isObject(stored) && MANUAL_ID.test(stored.manual_id || "") ? stored.manual_id : newManualId();
@@ -597,12 +612,12 @@
     } }, first.node, last.node, submit);
 
     put(el.col, 
-      h("button", { type: "button", class: "pv-back", onclick: renderWho }, icon("back", 20), "Zurück"),
+      h("button", { type: "button", class: "pv-back", onclick: function () { renderWho(true); } }, icon("back", 20), "Zurück"),
       h("p", { class: "pv-eyebrow", text: [S.poll.team.category, S.poll.team.season, S.poll.team.name].filter(Boolean).join(" · ") }),
       h("h1", { class: "pv-h1", text: "Nicht in der Liste", tabindex: "-1", "data-focus": "" }),
       h("p", { class: "pv-lede", text: "Die Mannschaftsführung sieht deinen Namen mit dem Hinweis „nicht im Kader“." }),
       form);
-    focusHeading();
+    settleFocus(true);
   }
 
   // ---------------------------------------------------------------------------------------------------------------
@@ -630,7 +645,8 @@
       h("label", { class: "pv-field" }, h("span", { class: "pv-float", text: "Kommentar (optional)" }), input),
       h("div", { class: "pv-hintrow" }, hint, count));
 
-    function updateCount() { count.textContent = Array.from(input.value).length + "/" + COMMENT_MAX; }
+    // value.length (UTF-16 units) is what maxlength counts, so the counter reaches 60/60 exactly when typing stops.
+    function updateCount() { count.textContent = input.value.length + "/" + COMMENT_MAX; }
     input.addEventListener("input", updateCount);
     input.addEventListener("change", function () { saveComment(meeting.id, input.value); input.value = clean(input.value); updateCount(); });
 
@@ -735,7 +751,7 @@
     var rest = meetings.slice(1);
     var sub = h("p", { class: "pv-sub" },
       (S.poll.team.name ? S.poll.team.name + " · " : "") + "Antwort von " + identityName() + " · ",
-      h("button", { type: "button", class: "pv-linkbtn", text: "Nicht du? Ändern", onclick: renderWho }));
+      h("button", { type: "button", class: "pv-linkbtn", text: "Nicht du? Ändern", onclick: function () { renderWho(true); } }));
 
     S.offlineEl = h("div", { class: "pv-offline", role: "status", hidden: S.online }, icon("wifioff", 20), h("span", { text: TEXT.offline }));
 
@@ -755,7 +771,7 @@
         list);
     }
     refreshAll();
-    if (focus) focusHeading();
+    settleFocus(focus);
   }
 
   function refresh(mid) { if (S.ui[mid]) S.ui[mid].update(); }
@@ -781,7 +797,7 @@
   function saveComment(mid, value) {
     var current = S.answers[mid];
     if (!current || !S.online) return;
-    var comment = clean(value).slice(0, COMMENT_MAX);
+    var comment = cut(clean(value), COMMENT_MAX);
     if (comment === current.comment) return;
     commit(mid, { status: current.status, comment: comment });
   }
@@ -809,7 +825,7 @@
         snack(TEXT.saved);
       }, function (error) {
         if (S.identity !== identity) return;
-        fail(mid, attempt, error && error.code ? error.code : "network");
+        fail(mid, attempt, error && error.code ? error.code : "network", error && error.detail);
       });
     });
   }
@@ -821,41 +837,58 @@
     refresh(mid);
   }
 
-  function fail(mid, attempt, code) {
-    var again = function () { if (S.online) commit(mid, attempt); };
+  function fail(mid, attempt, code, detail) {
+    var shown;
+    // "Erneut" only resends while the shown answer is still the reverted one (no newer choice in between).
+    var again = function () { if (S.online && S.answers[mid] === shown) commit(mid, attempt); };
     if (code === "meeting_closed") {
       revert(mid, attempt);
       S.closed[mid] = true;
       if (S.view === "answer") renderAnswer(false);
       snack(TEXT.closed);
+    } else if (code === "meeting_unknown") {
+      // A newer snapshot removed or replaced this match: hide it and load the current schedule.
+      revert(mid, attempt);
+      S.closed[mid] = true;
+      if (S.view === "answer") renderAnswer(false);
+      snack(TEXT.changed);
+      silentRefresh(true);
     } else if (code === "player_unknown") {
       var id = S.identity;
       if (id.kind === "manual" && id.confirmed) {
         // The server no longer knows this manual person (e.g. old answers purged): send the full name once more.
         id.confirmed = false;
         persistConfirmed();
-        again();
+        commit(mid, attempt);
         return;
       }
+      // The roster changed (person removed): load the current roster before asking again.
       revert(mid, attempt);
       clearIdentity();
-      renderWho();
-      snack(TEXT.playerUnknown);
+      load(true).then(function () { if (S.view === "who") snack(TEXT.playerUnknown); });
     } else if (code === "manual_limit") {
       revert(mid, attempt);
       clearIdentity();
-      renderWho();
+      renderWho(true);
       snack(TEXT.manualLimit);
     } else if (code === "poll_unknown") {
       renderUnknown();
+    } else if (code === "invalid_answer") {
+      // Retrying the same input cannot help.
+      revert(mid, attempt);
+      snack(TEXT.invalid);
+      if (detail === "first_name" || detail === "last_name" || detail === "manual_id") { clearIdentity(); renderWho(true); }
     } else if (code === "poll_paused") {
       revert(mid, attempt);
+      shown = S.answers[mid];
       snack(TEXT.paused, TEXT.retry, again);
     } else if (code === "poll_write_limit") {
       revert(mid, attempt);
+      shown = S.answers[mid];
       snack(TEXT.writeLimit, TEXT.retry, again);
     } else {
       revert(mid, attempt);
+      shown = S.answers[mid];
       snack(TEXT.notSaved, TEXT.retry, again);
     }
   }
@@ -863,14 +896,14 @@
   // ---------------------------------------------------------------------------------------------------------------
   // Loading and routing
 
-  function decide() {
+  function decide(focus) {
     var identity = validIdentity(S.store.identity);
     if (openMeetings().length === 0) { renderEnd(); return; }
-    if (identity) { setIdentity(identity); renderAnswer(false); }
-    else { if (S.store.identity) { clearIdentity(); } renderWho(); }
+    if (identity) { setIdentity(identity); renderAnswer(focus); }
+    else { if (S.store.identity) { clearIdentity(); } renderWho(focus); }
   }
 
-  function load() {
+  function load(focus) {
     renderLoading();
     return rpc("get_poll", { p_public_id: PUBLIC_ID }).then(function (data) {
       var poll = Array.isArray(data) ? data[0] : data;
@@ -881,13 +914,13 @@
       S.offset = parsed.offset;
       S.fetchedAt = Date.now();
       S.store = loadStore();
-      decide();
+      decide(focus);
     }, function () { renderLoadError(); });
   }
 
   /** Silent refresh when the tab comes back after a while: new matches, changed times, new roster. */
-  function silentRefresh() {
-    if (!S.poll || !S.online || Date.now() - S.fetchedAt < REFRESH_AFTER_MS) return;
+  function silentRefresh(force) {
+    if (!S.poll || !S.online || (force !== true && Date.now() - S.fetchedAt < REFRESH_AFTER_MS)) return;
     if (document.activeElement && document.activeElement.tagName === "INPUT") return;
     S.fetchedAt = Date.now();
     rpc("get_poll", { p_public_id: PUBLIC_ID }).then(function (data) {
@@ -898,7 +931,8 @@
       S.poll = parsed.poll;
       S.offset = parsed.offset;
       if (S.view === "answer" || S.view === "who" || S.view === "end") {
-        if (S.identity) { var again = validIdentity(S.identity); if (again) { S.identity = again; renderAnswer(false); return; } }
+        // Keep the identity object itself: pending saves compare it and would otherwise be dropped.
+        if (S.identity && validIdentity(S.identity)) { renderAnswer(false); return; }
         decide();
       }
     }, function () { /* keep the current page */ });
@@ -917,7 +951,7 @@
     S.online = navigator.onLine !== false;
     if (S.offlineEl) S.offlineEl.hidden = S.online;
     refreshAll();
-    if (S.online && S.view === "error") load();
+    if (S.online && S.view === "error") load(false);
   }
 
   function init() {
@@ -927,7 +961,7 @@
     window.addEventListener("offline", applyOnline);
     document.addEventListener("visibilitychange", function () { if (!document.hidden) silentRefresh(); });
     setInterval(tick, 30000);
-    load();
+    load(false);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

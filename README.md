@@ -32,8 +32,10 @@ blendet die Einladungsansicht aus, `poll.js` baut die Seite, `poll.css` gestalte
 - **Nur bis zum Anstoß:** Spieltage mit `starts_at` in der Vergangenheit werden ausgeblendet (Serverzeit aus `server_time`,
   nicht die Gerätezeit); ist keiner mehr offen, steht „Die Saison ist zu Ende. Danke fürs Mitmachen!“. `meeting_closed` blendet
   den Spieltag sofort aus. Zeiten erscheinen in österreichischer Zeit.
-- **Fehlercodes:** `poll_unknown`/unbekannt → „Diese Abfrage gibt es nicht mehr.“; `player_unknown` → Identität verwerfen und
-  „Wer bist du?“; `poll_paused`, `poll_write_limit`, `manual_limit`, Netzwerk → Snackbar. Offline (`navigator.onLine`) zeigt
+- **Fehlercodes:** `poll_unknown`/unbekannt → „Diese Abfrage gibt es nicht mehr.“; `player_unknown` → bei einer
+  manuellen Person einmal mit vollem Namen neu senden, sonst Identität verwerfen, Abfrage neu laden und „Wer bist du?“;
+  `meeting_unknown` → Spieltag ausblenden, Abfrage neu laden; `invalid_answer` → Snackbar ohne „Erneut“; `manual_limit` →
+  „Wer bist du?“ mit Snackbar; `poll_paused`, `poll_write_limit`, Netzwerk → Snackbar mit „Erneut“. Offline (`navigator.onLine`) zeigt
   den Banner und sperrt alle Eingaben.
 - **Lokaler Speicher** (`localStorage`, Schlüssel `kortform.poll.<poll_uid>`, nicht `public_id`, damit ein zurückgesetzter Link
   die Antworten behält): gewählte Person (Kaderschlüssel oder manuelle ID `m_` + 12 Zeichen aus `crypto.getRandomValues`,
