@@ -110,6 +110,8 @@
   }
 
   function init() {
+    // /v/<id> and /w/<id> belong to poll.js (availability poll); this script stays out of the way.
+    if (/^\/[vw]\//.test(window.location.pathname)) return;
     var match = /^\/([td])\/([A-Za-z0-9_-]{4,64})\/?$/.exec(window.location.pathname);
     if (!match) {
       // Not an invite path: plain "not found" page.

@@ -3,11 +3,17 @@
     "details": [
       {
         "appIDs": ["84TKTNMRH2.com.swordistudios.kortform"],
-        "components": [{ "/": "/t/*", "comment": "Prod invite links" }]
+        "components": [
+          { "/": "/t/*", "comment": "Prod invite links" },
+          { "/": "/v/*", "comment": "Prod availability poll links" }
+        ]
       },
       {
         "appIDs": ["84TKTNMRH2.com.swordistudios.kortform.dev"],
-        "components": [{ "/": "/d/*", "comment": "Dev invite links" }]
+        "components": [
+          { "/": "/d/*", "comment": "Dev invite links" },
+          { "/": "/w/*", "comment": "Dev availability poll links" }
+        ]
       }
     ]
   }

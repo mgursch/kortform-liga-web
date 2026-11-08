@@ -6,7 +6,8 @@
   <title>Einladung zur Mannschaftsführung · Kortform</title>
   <meta name="robots" content="noindex">
   <meta name="referrer" content="no-referrer">
-  <!-- GitHub Pages serves this file for every unknown path, so /t/<token> and /d/<token> end up here. All asset paths are absolute.
+  <!-- GitHub Pages serves this file for every unknown path, so /t/<token> and /d/<token> (invites, invite.js) and
+       /v/<id> and /w/<id> (availability poll, poll.js) end up here. All asset paths are absolute.
        connect-src: the Supabase projects of config.js (dev + prod). Keep the hosts in sync when a ref changes. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'self'; script-src 'self'; connect-src https://pjccvfvaeyvqjldfwqje.supabase.co https://sjkoqqcpfwegmwzavida.supabase.co; font-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="theme-color" content="#faf9f5" media="(prefers-color-scheme: light)">
@@ -15,10 +16,15 @@
   <link rel="icon" href="/favicon-small.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/poll.css">
+  <!-- route.js is tiny and blocking on purpose: it marks /v/<id> and /w/<id> before the first paint, so the invite markup never flashes. -->
+  <script src="/route.js"></script>
   <script src="/config.js" defer></script>
+  <script src="/poll.js" defer></script>
   <script src="/invite.js" defer></script>
 </head>
 <body>
+  <div class="view" id="invite-view">
   <div class="app-banner" id="app-banner">
     <span class="app-icon"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 108 108" fill="none"><polyline stroke="#3ea56b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" points="18,38 24,38 30,45 36,45 42,34 48,34 54,52 60,52 66,62 72,62 78,57 84,57 90,72"></polyline></svg></span>
     <span class="app-banner-text"><strong>Kortform-App</strong><span>schneller in der App</span></span>
@@ -60,5 +66,9 @@
     <span>liga.kortform.at · keine Tracking-Cookies</span>
     <a href="https://kortform.at/datenschutz/" rel="noopener noreferrer">Datenschutz</a>
   </footer>
+  </div>
+
+  <div class="view" id="poll-view" hidden></div>
+  <noscript><p class="poll-noscript">Für die Verfügbarkeitsabfrage braucht diese Seite JavaScript. Du kannst auch die Kortform-App verwenden.</p></noscript>
 </body>
 </html>
