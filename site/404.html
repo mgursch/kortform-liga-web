@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex">
   <meta name="referrer" content="no-referrer">
   <!-- GitHub Pages serves this file for every unknown path, so /t/<token> and /d/<token> (invites, invite.js) and
-       /v/<id> and /w/<id> (availability poll, poll.js) end up here. All asset paths are absolute.
+       /s/<id> and /z/<id> (availability page, season.js) and /v/<id> and /w/<id> (old poll links: static notice below) end up here. All asset paths are absolute.
        connect-src: the Supabase projects of config.js (dev + prod). Keep the hosts in sync when a ref changes. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'self'; script-src 'self'; connect-src https://pjccvfvaeyvqjldfwqje.supabase.co https://sjkoqqcpfwegmwzavida.supabase.co; font-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="theme-color" content="#faf9f5" media="(prefers-color-scheme: light)">
@@ -16,11 +16,11 @@
   <link rel="icon" href="/favicon-small.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/style.css">
-  <link rel="stylesheet" href="/poll.css">
-  <!-- route.js is tiny and blocking on purpose: it marks /v/<id> and /w/<id> before the first paint, so the invite markup never flashes. -->
+  <link rel="stylesheet" href="/season.css">
+  <!-- route.js is tiny and blocking on purpose: it marks the availability paths before the first paint, so the invite markup never flashes. -->
   <script src="/route.js"></script>
   <script src="/config.js" defer></script>
-  <script src="/poll.js" defer></script>
+  <script src="/season.js" defer></script>
   <script src="/invite.js" defer></script>
 </head>
 <body>
@@ -68,7 +68,27 @@
   </footer>
   </div>
 
-  <div class="view" id="poll-view" hidden></div>
-  <noscript><p class="poll-noscript">Für die Verfügbarkeitsabfrage braucht diese Seite JavaScript. Du kannst auch die Kortform-App verwenden.</p></noscript>
+  <div class="view" id="season-view" hidden></div>
+  <noscript><p class="season-noscript">Zum Eintragen der Verfügbarkeit braucht diese Seite JavaScript. Du kannst auch die Kortform-App verwenden.</p></noscript>
+
+  <!-- Old availability poll links (/v/<id>, /w/<id>): the feature no longer exists. Plain markup, shown by route.js (class route-ended) and styled in season.css. -->
+  <div class="view" id="ended-view">
+    <div class="pv-top">
+      <a class="pv-wordmark" href="https://kortform.at/">Kortform</a>
+      <span class="pv-top-sub">· Verfügbarkeit</span>
+    </div>
+    <main class="pv-main">
+      <div class="pv-message">
+        <span class="pv-message-icon" aria-hidden="true"><svg aria-hidden="true" focusable="false" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 11v5"></path><path d="M12 8v.01"></path></svg></span>
+        <h1 class="pv-ended-title">Abfrage beendet</h1>
+        <p>Diese Abfrage wurde beendet. Frag deine Mannschaftsführung nach dem neuen Link.</p>
+        <p class="pv-link-line"><a href="https://kortform.at/">Mehr zu Kortform auf kortform.at</a></p>
+      </div>
+    </main>
+    <footer>
+      <span>liga.kortform.at · keine Tracking-Cookies</span>
+      <a href="https://kortform.at/datenschutz/" rel="noopener noreferrer">Datenschutz</a>
+    </footer>
+  </div>
 </body>
 </html>
