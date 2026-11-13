@@ -33,7 +33,7 @@ Einladungsansicht aus, `season.js` baut die Seite, `season.css` gestaltet sie. `
   Gegner, Adresse (Link auf Google Maps), eigene Antwort als Ja / Vielleicht / Nein, optionaler Kommentar (bis 60 Zeichen,
   speichert beim Verlassen des Feldes), „bestätigt“-Marke, abgesagte Spieltage durchgestrichen und nicht beantwortbar,
   vergangene Spieltage (`starts_at` ≤ Serverzeit) in einem eingeklappten Bereich ohne Eingabe. Je Spieltag klappt
-  „Mannschaft“ auf: Zähler und Namen gruppiert nach Ja / Vielleicht / Nein / Offen (die Mannschaft sieht alle Antworten,
+  „Mannschaft“ auf: Zähler und Namen gruppiert nach Ja / Vielleicht / Nein / Offen (die Mannschaft sieht alle Antworten, aber nie fremde Kommentare: die sieht nur die Mannschaftsführung,
   Produktentscheidung) und „Dein Verlauf“ (z. B. „Ja · Web · 2.6. 18:04“, „bestätigt · App · 12.6.“).
 - **Erinnerung oben (gleiche Logik wie die App):** Der früheste nicht abgesagte Spieltag mit `starts_at − 14 Tage ≤ jetzt <
   starts_at` (jetzt = Serverzeit aus `server_time`, nicht die Gerätezeit), der „fällig“ ist: keine eigene Antwort → „Du hast

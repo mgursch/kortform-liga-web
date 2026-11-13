@@ -43,6 +43,7 @@
     notFound: "Diesen Link kennen wir nicht. Er wurde vielleicht erneuert. Bitte frag deine Mannschaftsführung nach dem aktuellen Link.",
     expired: "Diese Saison ist zu Ende. Danke fürs Mitmachen!",
     loadError: "Die Seite konnte nicht geladen werden. Bitte prüfe deine Verbindung und versuche es noch einmal.",
+    otherError: "Das hat gerade nicht geklappt. Versuch es später noch einmal.",
     offline: "Keine Verbindung. Eintragen ist möglich, sobald du wieder online bist.",
     saved: "Gespeichert",
     confirmed: "Bestätigt",
@@ -571,9 +572,11 @@
   function renderNotFound() { renderMessage("notfound", "Link nicht gefunden", TEXT.notFound, "info"); }
   function renderExpired() { renderMessage("expired", "Saison beendet", TEXT.expired, "check"); }
 
-  function renderLoadError() {
+  /** `error`: the RpcError of the failed call; only a network failure (or being offline) blames the connection. */
+  function renderLoadError(error) {
+    var network = !S.online || (error && error.code === "network");
     var retry = h("button", { type: "button", class: "btn btn-large", text: "Erneut versuchen", onclick: function () { load(); } });
-    renderMessage("error", "Seite nicht geladen", TEXT.loadError, "wifioff", retry);
+    renderMessage("error", "Seite nicht geladen", network ? TEXT.loadError : TEXT.otherError, network ? "wifioff" : "info", retry);
   }
 
   // ---------------------------------------------------------------------------------------------------------------
@@ -692,7 +695,10 @@
     } else if (S.bannerEdit === m.id) {
       body = "Wie sieht es jetzt aus?";
       actions = h("div", { class: "pv-banner-edit" },
-        answerGroup(label, answer.status, fid, function (status) { pick(m.id, status); }),
+        answerGroup(label, answer.status, fid, function (status) {
+          // Tapping the answer that is already selected confirms it, like "Passt noch".
+          if (status === answer.status) { S.bannerEdit = null; confirmAnswer(m.id); } else pick(m.id, status);
+        }),
         h("button", { type: "button", class: "pv-linkbtn", "data-fid": fid + "back", text: "Abbrechen", onclick: function () { S.bannerEdit = null; renderSeason({}); focusFid(fid + "change"); } }));
     } else {
       body = "Hat sich deine Verfügbarkeit geändert?";
@@ -737,7 +743,7 @@
       shown: answer && answer.comment && !open ? h("p", { class: "pv-comment", text: "„" + answer.comment + "“" }) : null,
       field: open ? h("div", { class: "pv-fieldwrap" },
         h("label", { class: "pv-field" }, h("span", { class: "pv-float", text: "Kommentar (optional)" }), input),
-        h("div", { class: "pv-hintrow" }, h("span", { id: hintId, text: answer ? "Wird beim Verlassen des Feldes gespeichert." : "Wähle zuerst eine Antwort." }), count)) : null
+        h("div", { class: "pv-hintrow" }, h("span", { id: hintId, text: answer ? "Nur deine Mannschaftsführung sieht deinen Kommentar." : "Wähle zuerst eine Antwort." }), count)) : null
     };
   }
 
@@ -769,8 +775,7 @@
         h("div", { class: "pv-group-label", text: name + " (" + groups[key].length + ")" }),
         h("ul", { class: "pv-names" }, groups[key].map(function (entry) {
           return h("li", null,
-            h("span", { text: entry.person.label + (entry.person.key === S.identity ? " (du)" : "") }),
-            entry.answer && entry.answer.comment ? h("span", { class: "pv-name-comment", text: " „" + entry.answer.comment + "“" }) : null);
+            h("span", { text: entry.person.label + (entry.person.key === S.identity ? " (du)" : "") }));
         }))));
     });
     if (!roster.length) body.appendChild(h("p", { class: "pv-none", text: "Noch kein Kader eingetragen." }));
@@ -992,7 +997,7 @@
         if (parsed) { S.offset = parsed.offset; applyParsed(parsed, true); }
         else renderLoadError();
         snack(TEXT.personGone);
-      }, function () { renderLoadError(); });
+      }, function (error) { renderLoadError(error); });
     } else if (code === "season_unknown") { renderNotFound(); return null; }
     else if (code === "season_expired") { renderExpired(); return null; }
     else if (code === "avail_paused") { message = TEXT.paused; offerRetry = true; }
@@ -1019,7 +1024,7 @@
       S.identity = null;
       S.pending = {};
       saveIdentity(null);
-      gone = S.view === "season";
+      gone = true;
     }
     if (S.identity) renderSeason({ view: S.view !== "season", focus: focus });
     else renderWho(focus);
@@ -1034,7 +1039,7 @@
       S.offset = parsed.offset;
       S.fetchedAt = Date.now();
       applyParsed(parsed, false);
-    }, function () { renderLoadError(); });
+    }, function (error) { renderLoadError(error); });
   }
 
   /** Silent refresh when the tab comes back after a while: new matches, changed times, new answers of the team. */

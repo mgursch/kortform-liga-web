@@ -171,7 +171,6 @@
 .pv-team-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 12px; }
 .pv-group-label { font-size: 13px; font-weight: 600; color: var(--pv-link); }
 .pv-names { margin: 2px 0 0; padding: 0; list-style: none; font-size: 14px; line-height: 21px; }
-.pv-name-comment { color: var(--text-2); font-style: italic; overflow-wrap: anywhere; }
 .pv-history { margin: 2px 0 0; padding: 0; list-style: none; font-size: 14px; line-height: 21px; }
 
 /* Past meetings (collapsed, read-only) */
