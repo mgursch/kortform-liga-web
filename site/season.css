@@ -1,0 +1,239 @@
+/* liga.kortform.at: availability page (/s/<id>, /z/<id>), built by season.js, and the static notice for the old poll links
+   (/v/<id>, /w/<id>). Loaded together with style.css (tokens, fonts, .app-banner, .btn, .spinner, footer). Colors follow
+   design/DESIGN.md (light + dark). No inline styles anywhere (CSP style-src 'self'): season.js only toggles classes and
+   the hidden attribute. */
+
+:root {
+  --pv-surface: #ffffff;
+  --pv-outline: #7a766c;
+  --pv-sep: #eceada;
+  --pv-chip: #f1efe4;
+  --pv-chip-home: #dff0e5;
+  --pv-on-chip-home: #0f1a13;
+  --pv-search: #ebe8db;
+  --pv-link: #1f5c34;
+  --pv-seg-sel: #dff0e5;
+  --pv-on-seg-sel: #0f1a13;
+  --pv-remind: #e7f3ea;
+  --pv-remind-border: #b7d9c2;
+  --pv-snack: #31302a;
+  --pv-on-snack: #f2f3f0;
+  --pv-snack-action: #7fd3a1;
+  --pv-store: #16150f;
+  --pv-on-store: #f2f3f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pv-surface: #1f1e18;
+    --pv-outline: #8a867c;
+    --pv-sep: #2f2e26;
+    --pv-chip: #2f2e26;
+    --pv-chip-home: #1e3a2a;
+    --pv-on-chip-home: #dff0e5;
+    --pv-search: #2f2e26;
+    --pv-link: #7fd3a1;
+    --pv-seg-sel: #1e3a2a;
+    --pv-on-seg-sel: #dff0e5;
+    --pv-remind: #1b2e22;
+    --pv-remind-border: #2c5039;
+    --pv-snack: #e8e6df;
+    --pv-on-snack: #16150f;
+    --pv-snack-action: #1f5c34;
+    --pv-store: #000000;
+    --pv-on-store: #f2f3f0;
+  }
+}
+
+/* The page shell: 404.html holds the invite view, the season view and the notice side by side; route.js decides which
+   one shows (class on <html>). */
+.view { display: flex; flex-direction: column; flex-grow: 1; }
+.route-season #invite-view, .route-ended #invite-view { display: none; }
+.route-ended #season-view { display: none; }
+#ended-view { display: none; }
+.season-noscript { margin: 24px 16px; text-align: center; }
+.route-ended #ended-view { display: flex; }
+
+#season-view a, #ended-view a { color: var(--pv-link); }
+#season-view button { font-family: inherit; color: inherit; }
+#season-view button:focus-visible,
+#season-view a:focus-visible,
+#season-view input:focus-visible,
+#season-view summary:focus-visible { outline: 3px solid var(--pv-link); outline-offset: 2px; }
+#season-view button.btn { border: 0; cursor: pointer; }
+#season-view .btn { color: var(--on-primary); }
+#season-view .btn:focus-visible { outline-color: var(--text); }
+
+/* Header: phone = app banner + wordmark row, desktop (>= 1024) = one header row with store buttons. */
+.pv-top { height: 56px; padding: 0 16px; display: flex; align-items: center; gap: 10px; }
+.pv-wordmark { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase; color: var(--text); text-decoration: none; }
+#season-view a.pv-wordmark { color: var(--text); }
+.pv-top-sub { font-size: 13px; color: var(--text-2); }
+.pv-header { display: none; }
+.pv-store-hint { font-size: 13px; color: var(--text-2); }
+#season-view a.pv-store { height: 40px; padding: 0 16px; border-radius: 8px; background: var(--pv-store); color: var(--pv-on-store); border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+#season-view a.pv-store:hover { color: var(--pv-on-store); filter: brightness(1.15); }
+
+/* Content */
+.pv-main { flex-grow: 1; width: 100%; max-width: 520px; margin: 0 auto; padding: 0 16px 28px; }
+.pv-col { min-width: 0; width: 100%; }
+.pv-aside { display: none; }
+.pv-title { margin: 0; font-size: 22px; line-height: 28px; font-weight: 600; overflow-wrap: anywhere; }
+.pv-sub { margin: 2px 0 0; font-size: 13px; line-height: 18px; color: var(--text-2); }
+#season-view .pv-linkbtn { font-weight: 600; text-decoration: none; color: var(--pv-link); }
+.pv-linkbtn { border: 0; background: transparent; padding: 0; font-size: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.pv-eyebrow { margin: 0; font-size: 13px; color: var(--text-2); }
+.pv-h1 { margin: 2px 0 0; font-size: 22px; line-height: 28px; font-weight: 400; }
+#season-view [data-focus]:focus { outline: none; }
+
+.pv-offline { margin: 10px 0 0; border-radius: 12px; background: var(--banner); padding: 10px 14px; display: flex; gap: 10px; align-items: center; font-size: 14px; line-height: 20px; }
+.pv-offline svg { flex-shrink: 0; color: var(--text-2); }
+
+.pv-card { margin-top: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--pv-surface); padding: 14px 16px 10px; display: flex; flex-direction: column; gap: 10px; }
+.pv-card-label { font-size: 14px; font-weight: 500; color: var(--pv-link); }
+
+/* Reminder banner */
+.pv-remind { margin-top: 14px; border: 1px solid var(--pv-remind-border); border-radius: 12px; background: var(--pv-remind); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.pv-remind-head { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; line-height: 22px; font-weight: 600; }
+.pv-remind-head svg { flex-shrink: 0; margin-top: 1px; color: var(--pv-link); }
+.pv-remind-when { font-size: 14px; color: var(--text-2); overflow-wrap: anywhere; }
+.pv-remind-more { margin: 0; font-size: 13px; color: var(--text-2); }
+.pv-banner-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pv-banner-edit { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.pv-banner-edit .pv-seg { align-self: stretch; }
+.pv-solid-btn, .pv-outline-btn { height: 44px; border-radius: 22px; padding: 0 16px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.pv-solid-btn { border: 0; background: var(--primary); color: var(--on-primary); }
+#season-view .pv-solid-btn { color: var(--on-primary); }
+.pv-outline-btn { border: 1px solid var(--pv-outline); background: transparent; }
+.pv-solid-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.pv-outline-btn:hover:not(:disabled) { background: var(--pv-chip); }
+.pv-solid-btn:disabled, .pv-outline-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+#season-view .pv-solid-btn:focus-visible { outline-color: var(--text); }
+
+/* Segmented answer: Ja / Vielleicht / Nein (the selected one also shows an icon, not only a color) */
+.pv-seg { height: 44px; display: grid; grid-template-columns: 1fr 1.5fr 1fr; border: 1px solid var(--pv-outline); border-radius: 22px; overflow: hidden; }
+.pv-seg button { border: 0; background: transparent; font-size: 15px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; white-space: nowrap; padding: 0 6px; min-width: 0; }
+.pv-seg button + button { border-left: 1px solid var(--pv-outline); }
+.pv-seg button:hover:not(:disabled) { background: var(--pv-chip); }
+.pv-seg button[aria-pressed="true"] { background: var(--pv-seg-sel); color: var(--pv-on-seg-sel); font-weight: 600; }
+#season-view .pv-seg button:focus-visible { outline-offset: -3px; }
+.pv-seg button:disabled { opacity: 0.5; cursor: not-allowed; }
+.pv-seg-icon { display: inline-flex; }
+
+/* Month groups and meetings */
+.pv-month { margin-top: 20px; }
+.pv-month-label { margin: 0 0 4px; padding-bottom: 6px; border-bottom: 1px solid var(--pv-sep); font-size: 14px; font-weight: 600; color: var(--pv-link); }
+.pv-meets { margin: 0; padding: 0; list-style: none; }
+.pv-meet { padding: 14px 0 12px; border-bottom: 1px solid var(--pv-sep); display: flex; flex-direction: column; gap: 10px; }
+.pv-meet-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pv-meet-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.pv-when { font-size: 17px; line-height: 24px; font-weight: 600; }
+.pv-r { font-size: 13px; color: var(--text-2); }
+.pv-vs { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 15px; }
+.pv-vs-name { min-width: 0; overflow-wrap: anywhere; }
+.pv-chip { flex-shrink: 0; padding: 1px 6px; border-radius: 4px; background: var(--pv-chip); font-size: 11px; line-height: 15px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); }
+.pv-chip.home { background: var(--pv-chip-home); color: var(--pv-on-chip-home); }
+.pv-chip.cancelled { border: 1px solid var(--pv-outline); background: transparent; color: var(--text); }
+#season-view a.pv-map { display: flex; align-items: center; gap: 6px; font-size: 14px; text-decoration: none; overflow-wrap: anywhere; }
+#season-view a.pv-map:hover { text-decoration: underline; }
+.pv-map svg { flex-shrink: 0; }
+.is-cancelled .pv-when, .is-cancelled .pv-r, .is-cancelled .pv-vs-name { text-decoration: line-through; color: var(--text-2); }
+.is-past .pv-when { color: var(--text-2); }
+.pv-own-row { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.pv-own-row .pv-seg { align-self: stretch; }
+.pv-confirmed { padding: 0 8px; border-radius: 10px; background: var(--pv-chip-home); color: var(--pv-on-chip-home); font-size: 12px; line-height: 20px; font-weight: 600; }
+.pv-own { margin: 0; font-size: 14px; color: var(--text-2); overflow-wrap: anywhere; }
+
+/* Comment */
+.pv-pen { align-self: flex-start; min-height: 44px; margin: -6px 0 -6px -8px; padding: 0 8px; border: 0; background: transparent; border-radius: 22px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; color: var(--pv-link); }
+.pv-pen:hover:not(:disabled) { background: var(--pv-chip); }
+.pv-pen[aria-expanded="true"] { background: var(--pv-chip); }
+.pv-comment { margin: 0; font-size: 14px; font-style: italic; color: var(--text-2); overflow-wrap: anywhere; }
+
+/* Outlined text field with floating label */
+.pv-fieldwrap { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.pv-field { position: relative; display: block; }
+.pv-float { position: absolute; top: -9px; left: 12px; padding: 0 4px; background: var(--bg); font-size: 12px; line-height: 16px; font-weight: 500; color: var(--text-2); }
+.pv-field input { width: 100%; height: 56px; border: 1px solid var(--pv-outline); border-radius: 4px; background: transparent; padding: 0 16px; font-family: inherit; font-size: 16px; color: var(--text); text-overflow: ellipsis; }
+.pv-field input::placeholder { color: var(--pv-outline); }
+.pv-field input:focus { outline: none; border-color: var(--pv-link); box-shadow: 0 0 0 1px var(--pv-link); }
+#season-view .pv-field input:focus-visible, #season-view .pv-search input:focus-visible { outline: none; }
+.pv-field input:disabled { opacity: 0.6; cursor: not-allowed; }
+.pv-hintrow { padding: 0 16px; display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--text-2); }
+.pv-hintrow .pv-count { margin-left: auto; }
+
+/* Team (collapsible) */
+.pv-team { border: 1px solid var(--border); border-radius: 8px; background: var(--pv-surface); }
+.pv-team > summary, .pv-past > summary { cursor: pointer; }
+.pv-team > summary { min-height: 44px; padding: 8px 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font-size: 14px; }
+.pv-team-title { font-weight: 600; }
+.pv-team-sum { color: var(--text-2); font-size: 13px; }
+.pv-team-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 12px; }
+.pv-group-label { font-size: 13px; font-weight: 600; color: var(--pv-link); }
+.pv-names { margin: 2px 0 0; padding: 0; list-style: none; font-size: 14px; line-height: 21px; }
+.pv-history { margin: 2px 0 0; padding: 0; list-style: none; font-size: 14px; line-height: 21px; }
+
+/* Past meetings (collapsed, read-only) */
+.pv-past { margin-top: 24px; }
+.pv-past > summary { min-height: 44px; display: flex; align-items: center; font-size: 14px; font-weight: 600; color: var(--pv-link); }
+
+/* Who are you? */
+.pv-search { margin-top: 12px; height: 56px; border-radius: 28px; background: var(--pv-search); display: flex; align-items: center; gap: 12px; padding: 0 16px; color: var(--text-2); }
+.pv-search:focus-within { box-shadow: 0 0 0 2px var(--pv-link); }
+.pv-search input { flex-grow: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-family: inherit; font-size: 16px; color: var(--text); }
+.pv-search input::placeholder { color: var(--text-2); }
+.pv-people { margin: 8px 0 0; padding: 0; list-style: none; }
+.pv-person { width: 100%; min-height: 52px; display: flex; align-items: center; gap: 14px; padding: 0 4px; border: 0; border-bottom: 1px solid var(--pv-sep); background: transparent; cursor: pointer; text-align: left; font-size: 16px; }
+.pv-person:hover { background: var(--pv-chip); }
+.pv-avatar { width: 36px; height: 36px; flex-shrink: 0; border-radius: 18px; background: var(--pv-chip); color: var(--text-2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+.pv-person-name { flex-grow: 1; min-width: 0; overflow-wrap: anywhere; }
+.pv-none { margin: 4px 0 0; padding: 12px 0; font-size: 14px; color: var(--text-2); }
+.pv-lede { margin: 12px 0 0; font-size: 14px; line-height: 20px; color: var(--text-2); }
+
+/* Messages: loading, unknown, expired, load error, ended poll */
+.pv-loading { display: flex; justify-content: center; padding-top: 48px; }
+.pv-loading .spinner { margin-top: 0; }
+.pv-message { padding: 56px 16px 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.pv-message-icon { width: 96px; height: 96px; border-radius: 48px; background: var(--pv-chip); color: var(--pv-link); display: flex; align-items: center; justify-content: center; }
+.pv-message p { margin: 24px 0 0; max-width: 320px; font-size: 16px; line-height: 1.5; }
+.pv-message .btn { margin-top: 24px; max-width: 300px; }
+#ended-view { flex-direction: column; }
+#ended-view .pv-ended-title { margin: 24px 0 0; font-size: 22px; line-height: 28px; font-weight: 600; }
+#ended-view .pv-ended-title + p { margin-top: 8px; }
+#ended-view .pv-top { flex-shrink: 0; }
+#ended-view .pv-main { display: flex; justify-content: center; }
+#ended-view .pv-link-line { margin: 16px 0 0; font-size: 14px; }
+
+/* Snackbar */
+.pv-snack { position: fixed; z-index: 10; left: 16px; right: 16px; bottom: 24px; min-height: 48px; border-radius: 4px; background: var(--pv-snack); color: var(--pv-on-snack); padding: 6px 4px 6px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 3px 8px rgba(22, 21, 15, 0.25); }
+.pv-snack-text { flex-grow: 1; font-size: 14px; line-height: 20px; }
+.pv-snack button { height: 40px; padding: 0 12px; border: 0; border-radius: 20px; background: transparent; color: var(--pv-snack-action); font-size: 14px; font-weight: 600; cursor: pointer; }
+.pv-snack button:focus-visible { outline-color: var(--pv-on-snack); }
+
+#season-view footer, #ended-view footer { margin-top: auto; }
+
+@media (min-width: 640px) {
+  .pv-main { max-width: 720px; }
+  .pv-own-row { flex-direction: row; align-items: center; gap: 12px; }
+  .pv-own-row .pv-seg { align-self: auto; width: 340px; }
+}
+
+@media (min-width: 1024px) {
+  .app-banner.pv-banner, #season-view .pv-top { display: none; }
+  .pv-header { flex-shrink: 0; height: 64px; padding: 0 40px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+  .pv-header .app-icon { width: 32px; height: 32px; }
+  .pv-header .pv-top-sub { flex-grow: 1; font-size: 14px; }
+  #season-view .pv-main { max-width: none; padding: 28px 40px 32px; display: flex; justify-content: center; align-items: flex-start; gap: 32px; }
+  .pv-col { width: 780px; max-width: 780px; flex: 0 1 780px; }
+  .pv-aside { display: block; width: 300px; flex: 0 0 300px; padding-top: 4px; }
+  .pv-aside .pv-card { margin-top: 0; padding-bottom: 14px; }
+  .pv-aside p { margin: 0; font-size: 14px; line-height: 20px; }
+  .pv-title { font-size: 28px; line-height: 36px; }
+  .pv-h1 { font-size: 28px; line-height: 36px; }
+  .pv-search { width: 360px; max-width: 100%; margin-top: 14px; }
+  .pv-people { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+  .pv-snack { left: 50%; right: auto; width: 480px; max-width: calc(100% - 32px); transform: translateX(-50%); }
+  #season-view footer { padding-left: 40px; padding-right: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) { .pv-snack { transition: none; } }
