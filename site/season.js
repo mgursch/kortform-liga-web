@@ -356,12 +356,24 @@
     return {
       status: "ok",
       offset: offset,
-      season: { team: str(s.team_name), club: str(s.club_name), name: str(s.season_name), group: str(s.group_name) },
+      // `team` is the name the page shows as the team's identity: the alias of the team captain when there is one,
+      // else the official name. `official` is the official name as secondary context, only set next to an alias.
+      season: seasonNames(str(s.team_alias), str(s.team_name), str(s.club_name), str(s.season_name), str(s.group_name)),
       meetings: meetings,
       roster: roster,
       answers: answers,
       history: history
     };
+  }
+
+  /**
+   * Old backends send no `team_alias`; a missing, empty or blank alias leaves everything as without the feature, and so does
+   * an alias that only repeats the official name (both trimmed by the caller, case-insensitive, like the app).
+   */
+  function seasonNames(alias, team, club, name, group) {
+    if (alias.toLowerCase() === team.toLowerCase()) alias = "";
+    var official = alias && team ? team : "";
+    return { team: alias || team, official: official, club: club, name: name, group: group };
   }
 
   /** Asks the server for the season; a rejected person key is dropped and the call repeated once without it. */
@@ -584,7 +596,7 @@
 
   function seasonInfo() {
     var s = S.data.season;
-    return [s.club, s.name, s.group].filter(Boolean).join(" · ");
+    return [s.official, s.club, s.name, s.group].filter(Boolean).join(" · ");
   }
 
   // ---------------------------------------------------------------------------------------------------------------

@@ -70,7 +70,13 @@
     $("spinner").hidden = true;
     var inviter = typeof preview.inviter_display_name === "string" ? preview.inviter_display_name.trim() : "";
     var team = typeof preview.team_name === "string" ? preview.team_name.trim() : "";
-    var league = [preview.league_name || preview.group_name, preview.season_short_name || preview.season_long_name]
+    // Optional alias of the team captain: the main name when present, the official team name then leads the meta line.
+    // Old backends send no alias; missing, empty or blank means the page looks as before.
+    // An alias that only repeats the official name (trimmed, case-insensitive, like the app) counts as none.
+    var alias = typeof preview.alias === "string" ? preview.alias.trim() : "";
+    if (alias.toLowerCase() === team.toLowerCase()) alias = "";
+    var official = alias && team ? team : "";
+    var league = [official, preview.league_name || preview.group_name, preview.season_short_name || preview.season_long_name]
       .filter(function (part) { return typeof part === "string" && part.trim(); })
       .map(function (part) { return part.trim(); })
       .join(" · ");
@@ -78,7 +84,7 @@
     avatar.textContent = initials(inviter);
     avatar.hidden = !avatar.textContent;
     setText("lead", inviter ? inviter + " lädt dich ein" : "Einladung zur Mannschaftsführung");
-    setText("title", team ? "Mannschaftsführung für " + team : "Mannschaftsführung in der Kortform-App");
+    setText("title", (alias || team) ? "Mannschaftsführung für " + (alias || team) : "Mannschaftsführung in der Kortform-App");
     setText("meta", league);
     setText("text", VALID_TEXT);
     $(STORE_LINKS_ID).hidden = false;

@@ -10,6 +10,9 @@ Gehört zum Plan `docs/plans/kort-id-plan.md` im App-Repo `itn-rechner`.
   fragt die öffentliche RPC `get_invite_preview` des passenden Supabase-Projekts ab und zeigt Mannschaft und Liga bzw. eine
   Meldung für abgelaufene, benutzte, zurückgezogene oder unbekannte Einladungen. Dazu ein Banner „In der App öffnen“
   (`kortform://invite/<token>` für `/t/`, `kortform-dev://invite/<token>` für `/d/`) und die Store-Buttons.
+- **Alias:** Liefert `get_invite_preview` ein `alias` (optionaler Kurzname der Mannschaftsführung), ist er der Name in der
+  Überschrift; der offizielle Mannschaftsname (`team_name`) steht dann vorne in der Zeile darunter. Fehlt das Feld (altes
+  Backend) oder ist es leer, sieht die Seite aus wie ohne Alias.
 - Wenn die App installiert ist, öffnen Android App Links und iOS Universal Links den Link direkt in der App; die Seite
   erscheint nur ohne App.
 - `/s/<ID>` (Prod) und `/z/<ID>` (Dev): **Verfügbarkeit je Saison**, siehe unten.
@@ -29,6 +32,9 @@ Einladungsansicht aus, `season.js` baut die Seite, `season.css` gestaltet sie. `
   Antworten und, mit Personenschlüssel, den eigenen Verlauf (`own_history`). Ohne gemerkte Person „Wer bist du?“ (Kader
   alphabetisch, Anzeige „Nachname Vorname“, Suchfeld ab mehr als 10 Personen; ohne Namen „Spieler\*in ohne Namen“, der
   Schlüssel wird nie angezeigt). Danach die Saisonliste.
+- **Alias:** `season.team_alias` (optional, neben `season.team_name`) ist, wenn gesetzt, der Name der Mannschaft in
+  Überschrift, Seitentitel und „Wer bist du?“; der offizielle Name steht dann vorne in der Zeile darunter (vor Verein, Saison,
+  Gruppe). Fehlt das Feld (altes Backend), ist es leer oder gleich dem offiziellen Namen, bleibt alles wie ohne Alias.
 - **Saisonliste:** chronologisch, nach Monat gruppiert; Datum, Wochentag und Uhrzeit in österreichischer Zeit, Heim/Auswärts,
   Gegner, Adresse (Link auf Google Maps), eigene Antwort als Ja / Vielleicht / Nein, optionaler Kommentar (bis 60 Zeichen,
   speichert beim Verlassen des Feldes), „bestätigt“-Marke, abgesagte Spieltage durchgestrichen und nicht beantwortbar,
