@@ -366,9 +366,13 @@
     };
   }
 
-  /** Old backends send no `team_alias`; a missing, empty or blank alias leaves everything as without the feature. */
+  /**
+   * Old backends send no `team_alias`; a missing, empty or blank alias leaves everything as without the feature, and so does
+   * an alias that only repeats the official name (both trimmed by the caller, case-insensitive, like the app).
+   */
   function seasonNames(alias, team, club, name, group) {
-    var official = alias && team && team !== alias ? team : "";
+    if (alias.toLowerCase() === team.toLowerCase()) alias = "";
+    var official = alias && team ? team : "";
     return { team: alias || team, official: official, club: club, name: name, group: group };
   }
 

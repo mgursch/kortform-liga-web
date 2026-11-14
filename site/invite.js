@@ -72,8 +72,10 @@
     var team = typeof preview.team_name === "string" ? preview.team_name.trim() : "";
     // Optional alias of the team captain: the main name when present, the official team name then leads the meta line.
     // Old backends send no alias; missing, empty or blank means the page looks as before.
+    // An alias that only repeats the official name (trimmed, case-insensitive, like the app) counts as none.
     var alias = typeof preview.alias === "string" ? preview.alias.trim() : "";
-    var official = alias && team && team !== alias ? team : "";
+    if (alias.toLowerCase() === team.toLowerCase()) alias = "";
+    var official = alias && team ? team : "";
     var league = [official, preview.league_name || preview.group_name, preview.season_short_name || preview.season_long_name]
       .filter(function (part) { return typeof part === "string" && part.trim(); })
       .map(function (part) { return part.trim(); })
