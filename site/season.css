@@ -19,6 +19,8 @@
   --pv-snack: #31302a;
   --pv-on-snack: #f2f3f0;
   --pv-snack-action: #7fd3a1;
+  --pv-snack-btn: #7fd3a1;
+  --pv-snack-on-btn: #16150f;
   --pv-store: #16150f;
   --pv-on-store: #f2f3f0;
 }
@@ -40,6 +42,8 @@
     --pv-snack: #e8e6df;
     --pv-on-snack: #16150f;
     --pv-snack-action: #1f5c34;
+    --pv-snack-btn: #1f5c34;
+    --pv-snack-on-btn: #f2f3f0;
     --pv-store: #000000;
     --pv-on-store: #f2f3f0;
   }
@@ -204,11 +208,40 @@
 #ended-view .pv-main { display: flex; justify-content: center; }
 #ended-view .pv-link-line { margin: 16px 0 0; font-size: 14px; }
 
+/* App promotion: muted hints, comparison block (no banner, no images) */
+.pv-hint { margin: 0; font-size: 13px; line-height: 18px; color: var(--text-2); }
+.pv-lede + .pv-hint, .pv-h1 + .pv-hint { margin-top: 6px; }
+.pv-promo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin-top: 4px; }
+#season-view a.pv-install { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; color: var(--on-primary); }
+#season-view a.pv-install:focus-visible { outline-color: var(--text); }
+#season-view a.pv-promo-open { font-size: 14px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
+#season-view a.pv-promo-open:hover { text-decoration: underline; }
+.pv-compare { margin-top: 28px; border: 1px solid var(--border); border-radius: 12px; background: var(--pv-surface); padding: 14px 16px; }
+.pv-compare-title { margin: 0 0 8px; font-size: 14px; font-weight: 600; color: var(--pv-link); }
+.pv-compare-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; line-height: 18px; }
+.pv-compare-table th, .pv-compare-table td { padding: 6px 6px 6px 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--pv-sep); overflow-wrap: anywhere; }
+.pv-compare-table thead th { font-size: 12px; color: var(--text-2); font-weight: 600; }
+.pv-compare-table tbody th { font-weight: 600; width: 30%; }
+.pv-compare-table td { color: var(--text-2); }
+.pv-compare-table td.pv-app-cell { color: var(--text); font-weight: 500; }
+
 /* Snackbar */
 .pv-snack { position: fixed; z-index: 10; left: 16px; right: 16px; bottom: 24px; min-height: 48px; border-radius: 4px; background: var(--pv-snack); color: var(--pv-on-snack); padding: 6px 4px 6px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 3px 8px rgba(22, 21, 15, 0.25); }
+.pv-snack-main { flex-grow: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pv-snack-promo { flex-basis: 100%; padding: 0 0 4px; }
+.pv-snack.is-promo { flex-direction: column; align-items: stretch; gap: 0; padding: 2px 4px 6px 16px; }
+.pv-snack.is-promo .pv-snack-text { font-weight: 600; }
+.pv-snack.is-promo .pv-snack-promo { padding-right: 12px; }
+.pv-snack-body { margin: 0; font-size: 14px; line-height: 20px; }
+.pv-snack-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 16px; margin-top: 8px; }
+#season-view .pv-snack a { font-size: 14px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; color: var(--pv-snack-action); }
+#season-view .pv-snack a.pv-snack-install { padding: 0 20px; border-radius: 22px; background: var(--pv-snack-btn); color: var(--pv-snack-on-btn); }
+#season-view .pv-snack a:focus-visible, #season-view .pv-snack button:focus-visible { outline-color: var(--pv-on-snack); }
+.pv-snack-main .pv-snack-close { flex: 0 0 44px; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 22px; background: transparent; color: var(--pv-on-snack); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.pv-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .pv-snack-text { flex-grow: 1; font-size: 14px; line-height: 20px; }
-.pv-snack button { height: 40px; padding: 0 12px; border: 0; border-radius: 20px; background: transparent; color: var(--pv-snack-action); font-size: 14px; font-weight: 600; cursor: pointer; }
-.pv-snack button:focus-visible { outline-color: var(--pv-on-snack); }
+.pv-snack-main button:not(.pv-snack-close) { height: 40px; padding: 0 12px; border: 0; border-radius: 20px; background: transparent; color: var(--pv-snack-action); font-size: 14px; font-weight: 600; cursor: pointer; }
+.pv-snack-main button:focus-visible { outline-color: var(--pv-on-snack); }
 
 #season-view footer, #ended-view footer { margin-top: auto; }
 

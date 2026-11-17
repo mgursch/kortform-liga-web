@@ -26,7 +26,9 @@
   var REFRESH_AFTER_MS = 5 * 60 * 1000;
   var DAY_MS = 24 * 60 * 60 * 1000;
   var REMIND_MS = 14 * DAY_MS; // reminder window and "confirmed" threshold: 14 days before kickoff
+  var PROMO_MS = 10000;  // how long the app promo in the snackbar stays when nobody touches it
   var STORAGE_KEY = "kortform.avail." + PUBLIC_ID;
+  var INSTALL_URL = "https://kortform.at/app"; // store switch: phones go to their store, other devices see both buttons
 
   var STATUS = {
     yes: { label: "Ja", icon: "check" },
@@ -57,7 +59,14 @@
     personGone: "Du stehst nicht mehr im Kader dieser Mannschaft. Bitte wähle dich noch einmal aus.",
     noAnswer: "Du hast für diesen Spieltag noch nichts eingetragen.",
     invalid: "Nicht gespeichert. Bitte prüfe deine Eingabe.",
-    unnamed: "Spieler*in ohne Namen"
+    unnamed: "Spieler*in ohne Namen",
+    // App promotion (small hints, never counts of team members: that data is for the captain only)
+    promoHint: "Schon installiert? In der App öffnen",
+    promoBody: "Nächstes Mal geht’s ohne Link: Die Kortform-App erinnert dich vor jedem Spieltag, du antwortest mit einem Tipp.",
+    promoClose: "Hinweis schließen",
+    hintWho: "In der App erkennt dich Kortform automatisch.",
+    hintRemindGeneric: "In der App erinnert dich Kortform rechtzeitig vor jedem Spieltag.",
+    hintCalendar: "In der App mit einem Tipp in den Kalender."
   };
 
   // ---------------------------------------------------------------------------------------------------------------
@@ -227,10 +236,13 @@
     openComment: {},       // meetingId -> true: comment field expanded
     openPast: false,
     bannerEdit: null,      // meetingId whose answer the banner lets the player change
+    promoUsed: false,      // the app promo in the snackbar shows at most once per page visit
     sig: "",
     pointer: 0,            // time of the last pointerdown while a pointer is down (0 = none): do not replace the buttons under the finger
     renderPending: false,
     snackTimer: null,
+    snackHover: false,     // pointer inside the snackbar (pauses the promo timer)
+    promoRestore: null,    // {trigger, mid, status}: where the focus goes when the promo goes away
     offlineEl: null
   };
 
@@ -519,20 +531,33 @@
         h("p", { text: "Jede Auswahl wird sofort gespeichert. Du kannst sie bis zum Spielbeginn jederzeit ändern. Die Mannschaft sieht, wer Zeit hat." })));
     el.main = h("main", { class: "pv-main" }, el.col, el.aside);
 
-    el.snackText = h("span", { class: "pv-snack-text" });
+    // Only the first line ("Gespeichert", error texts) is announced: a separate, always present status region carries it,
+    // the visible text is aria-hidden so it is not read twice. The promo extras are outside any live region.
+    el.live = h("div", { class: "pv-sr-only", role: "status", "aria-live": "polite" });
+    el.snackText = h("span", { class: "pv-snack-text", "aria-hidden": "true" });
     el.snackAction = h("button", { type: "button", hidden: true });
-    el.snack = h("div", { class: "pv-snack", hidden: true }, el.snackText, el.snackAction);
+    // Promo variant of the snackbar (first successful save of a visit): extra text, install button, open link, close.
+    el.snackPromo = h("div", { class: "pv-snack-promo", hidden: true });
+    el.snackClose = h("button", { type: "button", class: "pv-snack-close", "aria-label": TEXT.promoClose, hidden: true, onclick: hideSnack }, icon("x", 18, 2.2));
+    el.snackMain = h("div", { class: "pv-snack-main" }, el.snackText, el.snackAction, el.snackClose);
+    el.snack = h("div", { class: "pv-snack", hidden: true }, el.snackMain, el.snackPromo);
 
     root.append(el.banner, el.header, el.top, el.main,
       h("footer", null,
         h("span", { text: "liga.kortform.at · keine Tracking-Cookies" }),
         h("a", { href: PRIVACY_URL, rel: "noopener noreferrer", text: "Datenschutz" })),
-      h("div", { role: "status", "aria-live": "polite" }, el.snack));
+      el.live, el.snack);
     root.hidden = false;
   }
 
   function snack(text, actionLabel, onAction) {
+    releaseSnackFocus();
     clearTimeout(S.snackTimer);
+    el.snack.classList.remove("is-promo");
+    el.snackClose.hidden = true;
+    el.snackPromo.hidden = true;
+    clear(el.snackPromo);
+    announce(text);
     el.snackText.textContent = text;
     if (actionLabel) {
       el.snackAction.textContent = actionLabel;
@@ -546,13 +571,42 @@
     S.snackTimer = setTimeout(hideSnack, actionLabel ? 9000 : 4000);
   }
 
-  function hideSnack() { clearTimeout(S.snackTimer); el.snack.hidden = true; }
+  /** Sets the text of the status region (cleared first, so the same text twice is announced twice). */
+  function announce(text) {
+    el.live.textContent = "";
+    setTimeout(function () { el.live.textContent = text; }, 50);
+  }
+
+  /** If the focus is inside the snackbar (promo links, close) it goes back to the control that saved before the bar goes away. */
+  function releaseSnackFocus() {
+    var r = S.promoRestore;
+    S.promoRestore = null; // only valid for the promo that set it
+    if (!el.snack.contains(document.activeElement)) return;
+    if (r && el.snack.classList.contains("is-promo")) restoreAfterPromo(r.trigger, r.mid, r.status);
+    else document.activeElement.blur();
+  }
+
+  function hideSnack() {
+    clearTimeout(S.snackTimer);
+    releaseSnackFocus();
+    el.snack.hidden = true;
+    el.live.textContent = "";
+  }
+
+  /** Promo timer: paused while the pointer or the focus is inside the snackbar, restarted when both are gone. */
+  function resumePromoTimer() {
+    if (!el.snack.classList.contains("is-promo") || el.snack.hidden) return;
+    if (S.snackHover || el.snack.contains(document.activeElement)) return;
+    clearTimeout(S.snackTimer);
+    S.snackTimer = setTimeout(hideSnack, PROMO_MS);
+  }
 
   /** Switches the content column to another view (scrolls to the top). */
   function show(view) {
     S.view = view;
     S.offlineEl = null;
     S.renderPending = false;
+    if (view !== "season") hideSnack(); // no promotion on loading, error, expired or not-found views
     el.aside.hidden = view !== "season";
     clear(el.col);
     window.scrollTo(0, 0);
@@ -633,6 +687,7 @@
     put(el.col,
       h("p", { class: "pv-eyebrow", text: [S.data.season.team, seasonInfo()].filter(Boolean).join(" · ") }),
       h("h1", { class: "pv-h1", text: "Wer bist du?", tabindex: "-1", "data-focus": "" }),
+      roster.length > 0 ? h("p", { class: "pv-hint", text: TEXT.hintWho }) : null,
       roster.length === 0 ? h("p", { class: "pv-lede", text: "Für diese Mannschaft ist noch kein Kader eingetragen. Bitte frag deine Mannschaftsführung." }) : null,
       search,
       list,
@@ -686,6 +741,100 @@
     if (current && current.status === status) { S.bannerEdit = null; renderSeason({}); return; }
     S.bannerEdit = null;
     submit(mid, status, current ? current.comment : "");
+  }
+
+  // App promotion. No banner: a snackbar variant after the first successful save (fixed position, no layout shift), small muted hints where the browser is
+  // weaker, and a compact comparison at the end of the list. Everything is built only in the season view.
+
+  /** The app link for this page's id (dev scheme on /z/). Never logged or stored anywhere else. */
+  function appOpenUrl() { return SCHEME + "://avail/" + PUBLIC_ID; }
+
+  function installButton(text) {
+    return h("a", { class: "pv-solid-btn pv-install", href: INSTALL_URL, rel: "noopener noreferrer", text: text || "App laden" });
+  }
+
+  function hintLine(text) { return h("p", { class: "pv-hint", text: text }); }
+
+  /** Browser vs. app, compact, no counts of any team's app users. */
+  function compareBlock() {
+    var rows = [
+      ["Erinnerung", "Nur, wenn du den Link öffnest", "14 Tage vor jedem Spieltag"],
+      ["Kalender", "Nein", "Mit einem Tipp"],
+      ["Alle Mannschaften", "Nur diese Mannschaft", "Auf einen Blick"],
+      ["Dein ITN", "Nein", "Täglich im Blick"]
+    ];
+    return h("section", { class: "pv-compare", "aria-labelledby": "pv-compare-title" },
+      h("h2", { class: "pv-compare-title", id: "pv-compare-title", text: "Mit der App" }),
+      h("table", { class: "pv-compare-table" },
+        h("thead", null, h("tr", null, h("td"), h("th", { scope: "col", text: "Browser" }), h("th", { scope: "col", text: "App" }))),
+        h("tbody", null, rows.map(function (r) {
+          return h("tr", null, h("th", { scope: "row", text: r[0] }), h("td", { text: r[1] }), h("td", { class: "pv-app-cell", text: r[2] }));
+        }))),
+      h("div", { class: "pv-promo-actions" },
+        installButton("App laden"),
+        h("a", { class: "pv-promo-open", href: appOpenUrl(), text: TEXT.promoHint })));
+  }
+
+  /** Where the single contextual hints go this render: the reminder hint (dated, on the first unanswered match whose
+      14-day window has not opened yet; else the generic text on the first unanswered one) and the calendar hint (first
+      answered match). Cancelled and past match days never carry one. */
+  function hintPlan(upcoming) {
+    var plan = { remind: null, calendar: null };
+    var firstOpen = null;
+    var t = now();
+    upcoming.forEach(function (m) {
+      if (m.cancelled) return;
+      if (ownAnswer(m.id)) { if (!plan.calendar) plan.calendar = m.id; return; }
+      if (!firstOpen) firstOpen = m.id;
+      if (!plan.remind && daysBetween(t, m.startsMs - REMIND_MS) >= 1) plan.remind = m.id;
+    });
+    if (!plan.remind) plan.remind = firstOpen;
+    return plan;
+  }
+
+  /** "In der App bekommst du am Sa, 14.11. eine Erinnerung aufs Handy." (14 days before kickoff, Austrian date); the
+      generic text when that day is today or past (only the fallback hint can land on such a match). */
+  function remindHint(m) {
+    var remindMs = m.startsMs - REMIND_MS;
+    if (daysBetween(now(), remindMs) >= 1) return "In der App bekommst du am " + formatDate(remindMs) + " eine Erinnerung aufs Handy.";
+    return TEXT.hintRemindGeneric;
+  }
+
+  /** After the first successful save of a visit the snackbar becomes a promo: first line like the normal one (announced
+      by the status region), then the app text, "App laden", the open link and a close button. It stays ~10 s or until
+      closed and never moves the list. `trigger` = data-fid of the control that saved; closing puts the focus back there. */
+  function offerPromo(label, trigger, mid, status) {
+    if (S.promoUsed) return;
+    S.promoUsed = true;
+    clearTimeout(S.snackTimer);
+    S.promoRestore = { trigger: trigger, mid: mid, status: status };
+    clear(el.snackPromo);
+    put(el.snackPromo,
+      h("p", { class: "pv-snack-body", text: TEXT.promoBody }),
+      h("div", { class: "pv-snack-actions" },
+        h("a", { class: "pv-snack-install", href: INSTALL_URL, rel: "noopener noreferrer", text: "App laden" }),
+        h("a", { class: "pv-snack-open", href: appOpenUrl(), text: TEXT.promoHint })));
+    announce(label);
+    el.snackText.textContent = label;
+    el.snackAction.hidden = true;
+    el.snackAction.onclick = null;
+    el.snackClose.hidden = false;
+    el.snack.classList.add("is-promo");
+    el.snackPromo.hidden = false;
+    el.snack.hidden = false;
+    S.snackTimer = setTimeout(hideSnack, PROMO_MS);
+  }
+
+  /** data-fid of the focused control in the list (the one that triggers a save), else null. */
+  function triggerFid() {
+    var a = document.activeElement;
+    return a && a !== document.body && el.col.contains(a) ? a.getAttribute("data-fid") : null;
+  }
+
+  /** Focus goes back to the control that saved, else the same match's selected answer, else the first answer button. */
+  function restoreAfterPromo(trigger, mid, status) {
+    var node = (trigger && byFid(trigger)) || byFid("a:" + mid + ":" + status) || el.col.querySelector(".pv-meets .pv-seg button");
+    if (node && !node.disabled) node.focus({ preventScroll: true });
   }
 
   /** The reminder on top: the earliest due meeting, same logic as the app. Hidden when nothing is due. */
@@ -808,6 +957,8 @@
     return details;
   }
 
+  var hintPlan_ = { remind: null, calendar: null }; // set by renderSeason before the items are built
+
   function meetingItem(m, past) {
     var answer = ownAnswer(m.id);
     var label = meetingLabel(m);
@@ -835,6 +986,8 @@
       h("div", { class: "pv-meet-info" }, head, vs, m.address ? mapsLink(m.address) : null),
       own,
       comment ? [comment.toggle, comment.shown, comment.field] : null,
+      !past && !m.cancelled && hintPlan_.remind === m.id ? hintLine(remindHint(m)) : null,
+      !past && !m.cancelled && hintPlan_.calendar === m.id ? hintLine(TEXT.hintCalendar) : null,
       m.cancelled ? null : teamSection(m));
   }
 
@@ -874,6 +1027,7 @@
     var upcoming = S.data.meetings.filter(function (m) { return !isPast(m); });
     var past = S.data.meetings.filter(isPast);
 
+    hintPlan_ = hintPlan(upcoming);
     S.offlineEl = h("div", { class: "pv-offline", role: "status", hidden: S.online }, icon("wifioff", 20), h("span", { text: TEXT.offline }));
 
     put(el.col,
@@ -896,6 +1050,8 @@
       pastDetails.addEventListener("toggle", function () { S.openPast = pastDetails.open; });
       put(el.col, pastDetails);
     }
+
+    put(el.col, compareBlock());
 
     if (opts.view) {
       if (opts.focus) focusHeading();
@@ -933,6 +1089,7 @@
   /** Saves an answer: shown at once, sent in order, followed by a re-fetch; springs back when it fails. */
   function submit(mid, status, comment) {
     var key = S.identity;
+    var trigger = triggerFid();
     var t = now();
     var overlay = { status: status, comment: comment, source: "web", answeredMs: t, confirmedMs: t };
     S.pending[mid] = overlay;
@@ -948,7 +1105,9 @@
         p_source: "web"
       }).then(function () {
         if (S.identity !== key) return null;
+        if (S.promoRestore) S.promoRestore = { trigger: trigger, mid: mid, status: status }; // a promo being replaced: focus goes to this save's control
         snack(TEXT.saved);
+        offerPromo(TEXT.saved, trigger, mid, status);
         return refetchAfterWrite(mid, overlay, key);
       }, function (error) { return writeFailed(error, mid, overlay, key, run); });
     };
@@ -958,6 +1117,7 @@
   /** Confirms the current answer ("Passt noch"). */
   function confirmAnswer(mid) {
     var key = S.identity;
+    var trigger = triggerFid();
     var current = ownAnswer(mid);
     if (!current || !S.online) return;
     var overlay = { status: current.status, comment: current.comment, source: current.source, answeredMs: current.answeredMs, confirmedMs: now() };
@@ -972,7 +1132,9 @@
         p_source: "web"
       }).then(function () {
         if (S.identity !== key) return null;
+        if (S.promoRestore) S.promoRestore = { trigger: trigger, mid: mid, status: current.status };
         snack(TEXT.confirmed);
+        offerPromo(TEXT.confirmed, trigger, mid, current.status);
         return refetchAfterWrite(mid, overlay, key);
       }, function (error) { return writeFailed(error, mid, overlay, key, run); });
     };
@@ -1102,6 +1264,10 @@
     document.addEventListener("pointerup", up, true);
     document.addEventListener("pointercancel", up, true);
     document.addEventListener("focusout", function () { if (S.renderPending && !pointerDown()) flushRender(0); });
+    el.snack.addEventListener("pointerenter", function () { S.snackHover = true; if (el.snack.classList.contains("is-promo")) clearTimeout(S.snackTimer); });
+    el.snack.addEventListener("pointerleave", function () { S.snackHover = false; resumePromoTimer(); });
+    el.snack.addEventListener("focusin", function () { if (el.snack.classList.contains("is-promo")) clearTimeout(S.snackTimer); });
+    el.snack.addEventListener("focusout", function () { setTimeout(resumePromoTimer, 0); });
     setInterval(tick, 30000);
     load();
   }

@@ -59,6 +59,13 @@ Einladungsansicht aus, `season.js` baut die Seite, `season.css` gestaltet sie. `
   den Eintrag. Es gibt weder Analytics noch Logging; `public_id` und Personenschlüssel gehen nur in die RPC-Aufrufe.
 - **App-Banner:** `kortform://avail/<ID>` (`/s/`) bzw. `kortform-dev://avail/<ID>` (`/z/`); ab 1024 px Kopfzeile mit
   „Google Play“ / „App Store“, rechts die Karte „So funktioniert’s“.
+- **App-Werbung (ohne Banner, ohne Tracking):** Alles baut `season.js` nur in der Saisonansicht (nie bei Laden, Fehler, abgelaufen, nicht gefunden). (1) Die **erste**
+  erfolgreiche Antwort oder Bestätigung je Seitenbesuch (nur im Speicher, kein Cookie, kein `localStorage`) erweitert die Snackbar (fest unten, verschiebt die Liste nicht): „Gespeichert“/„Bestätigt“,
+  Text zur Erinnerung vor jedem Spieltag, „App laden“ (`https://kortform.at/app`, Store-Weiche), „Schon installiert? In der App öffnen“ (Schema-Link der ID) und Schließen; sie bleibt ca. 10 s
+  oder bis zum Schließen (Fokus zurück auf das speichernde Element), jede weitere Antwort zeigt die normale Snackbar. (2) Kleine Hinweiszeilen: bei „Wer bist du?“ („In der App erkennt dich Kortform automatisch.“),
+  am ersten offenen Spieltag, dessen 14-Tage-Fenster noch nicht begonnen hat („… am Do, 3.12. eine Erinnerung aufs Handy.“, Datum = 14 Tage vor Anstoß in Wiener Zeit; gibt es keinen, steht der
+  Text ohne Datum am ersten offenen) und einmal am ersten beantworteten Spieltag („In der App mit einem Tipp in den Kalender.“). (3) Am Listenende der Block „Mit der App“ (Browser gegen App).
+  Es gibt bewusst **keine** Zahlen, wie viele der Mannschaft die App nutzen (nur für die MF sichtbar).
 - **Universal/App Links:** `/s/*` (Prod-App) und `/z/*` (Dev-App) stehen in `apple-app-site-association`; `assetlinks.json`
   ist pfadunabhängig und braucht keine Änderung. Die App muss die Pfade als Intent-Filter bzw. Deeplink annehmen.
   **Alte Pfade `/v/*` und `/w/*` stehen nicht mehr in der AASA:** ausgelieferte App-Versionen mit der alten Abfrage öffnen den
