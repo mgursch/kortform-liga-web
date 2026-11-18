@@ -244,6 +244,8 @@
 .pv-snack-main button:focus-visible { outline-color: var(--pv-on-snack); }
 
 #season-view footer, #ended-view footer { margin-top: auto; }
+#season-view footer .ig-link, #ended-view footer .ig-link { color: var(--text-2); }
+#season-view footer .ig-link:hover, #ended-view footer .ig-link:hover { color: var(--text); }
 
 @media (min-width: 640px) {
   .pv-main { max-width: 720px; }
