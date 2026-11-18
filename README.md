@@ -76,6 +76,14 @@ Einladungsansicht aus, `season.js` baut die Seite, `season.css` gestaltet sie. `
   Das CSP (`connect-src` nur die beiden Supabase-Hosts, `script-src 'self'`, `style-src 'self'`) bleibt unverändert; die Seite
   nutzt weder Inline-Skripte noch Inline-Styles.
 
+## Footer
+
+Jede Ansicht (`index.html`, Einladung, Hinweis „Abfrage beendet“ in `404.html` und die von `season.js` gebaute Saisonansicht samt Fehler-,
+Lade- und „abgelaufen“-Zuständen) trägt dieselbe Fußzeile: Hinweis, Link „Kortform auf Instagram“
+(`https://www.instagram.com/kortform.app/`, `target="_blank" rel="noopener noreferrer"`) und Datenschutz. Das Instagram-Glyph
+(Simple Icons „instagram“, CC0, unverändert, einfarbig über `currentColor`) steckt **inline** im Markup bzw. in `instagramLink()` in `season.js`; es gibt
+keine Instagram-Skripte, Widgets oder nachgeladenen Bilder (das CSP bleibt unverändert). Stil: `footer .ig-link` in `style.css`/`season.css`.
+
 ## Struktur
 
 ```
